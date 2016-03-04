@@ -18,7 +18,7 @@ BIOTYPE_CHOICES=(
 )
 
 class Gene(models.Model):
-    ensg = models.CharField(max_length=15)
+    ensg = models.CharField(max_length=15, unique=True)
     name = models.CharField(max_length=160)
     description = models.TextField(blank=True, null=True)
     biotype = models.CharField(max_length=14, choices=BIOTYPE_CHOICES, default="other")
@@ -35,25 +35,29 @@ class Ontology(models.Model):
         return self.name
 
 class Function(models.Model):
-    keyword = models.CharField(max_length=160)
+    keyword = models.CharField(max_length=160, unique=True)
     description = models.TextField(blank=True, null=True)
     ontology = models.ForeignKey(Ontology)
 
     def __unicode__(self):
         return self.keyword
 
-class Predictor(models.Model):
+
+class ExpressionSource(models.Model):
     name = models.CharField(max_length=160)
-    description = models.TextField()
+    internal_name = models.CharField(max_length=160)
+    description = models.TextField(blank=True, null=True)
 
 class GeneFunction(models.Model):
     gene = models.ForeignKey(Gene)
     function = models.ForeignKey(Function)
     fdr = models.FloatField()
-    predictior = models.ForeignKey(Predictor)
+    expression_source = models.ForeignKey(ExpressionSource)
+    known = models.BooleanField()
 
     class Meta:
         ordering = ['fdr',]
+        unique_together = (("gene", "function", "expression_source"),)
     
     def __unicode__(self):
         return "%s\t%s\t%g\t%s" % (gene,function,fdr,predictior)

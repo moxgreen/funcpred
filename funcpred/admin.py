@@ -17,8 +17,12 @@ class GeneAdmin(admin.ModelAdmin):
 class GeneAliasAdmin(admin.ModelAdmin):
 	list_display=("pk","gene","name")
 
+class ExpressionSourceAdmin(admin.ModelAdmin):
+	list_display=("pk","name")
+
 # Register your models here.
 admin.site.register(Ontology, OntologyAdmin)
 admin.site.register(Function, FunctionAdmin)
 admin.site.register(Gene, GeneAdmin)
 admin.site.register(GeneAlias, GeneAliasAdmin)
+admin.site.register(ExpressionSource, ExpressionSourceAdmin)
