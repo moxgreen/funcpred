@@ -1,4 +1,0 @@
-{% load staticfiles i18n %}lat	lon	title	description	icon	iconSize	iconOffset
-{% for r in object_list %}
-{{r.latitude}}	{{r.longitude}}	{{r.nome}}	{{r.map_abstract_spaceless}}	{% static 'funcprod_app/images/Ol_icon_blue_example.png'%}	24,24	0,-24
-{% endfor %}
