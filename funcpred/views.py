@@ -2,10 +2,19 @@
 from django.utils import timezone
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
+from django.forms import ModelForm
+from .models import GeneSearch
+
+
+class GeneSearchForm(ModelForm):
+    class Meta:
+        model = GeneSearch
+        fields = ['gene','expression_source','ontology']
 
 def index(request):
     #return HttpResponse('Hello from Python!')
-    return render(request, 'index.html')
+    form = GeneSearchForm()
+    return render(request, 'index.html',{'form': form})
 
 
 #from django.views.generic.list import ListView

@@ -61,3 +61,9 @@ class GeneFunction(models.Model):
     
     def __unicode__(self):
         return "%s\t%s\t%g\t%s" % (gene,function,fdr,predictior)
+
+class GeneSearch(models.Model):
+    gene = models.ForeignKey(Gene)
+    expression_source = models.ManyToManyField(ExpressionSource)
+    ontology = models.ManyToManyField(Ontology)
+
