@@ -1,5 +1,6 @@
 # Create your views here.
 from collections import defaultdict
+from operator import itemgetter
 from django.utils import timezone
 from django.http import HttpResponse#, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect
@@ -56,6 +57,7 @@ def show_gene_search(request, gene_search_pk):
     for gf in gene_functions:
         data.append({
             'function': gf.function,
+            'description':gf.function.description,
             'best_fdr': min_fdr[gf.function.pk],
         })
         for c in columns:
@@ -65,8 +67,9 @@ def show_gene_search(request, gene_search_pk):
             data[-1][c]=v
     ################
 
+    data.sort(key=itemgetter('best_fdr'))
     table = GeneFunctionTable(data,dinamically_added_columns=columns)
-    tables.RequestConfig(request).configure(table)
+    tables.RequestConfig(request,paginate={"per_page": 250}).configure(table)
 
     return render(request, 'show_gene_search.html',{'gene_search': gene_search,'gene_functions':gene_functions, 'table': table})
 
@@ -90,7 +93,9 @@ class GeneFunctionTable(tables.Table):
         return super(GeneFunctionTable, self).__init__(*args, **kwargs)
         # restore original base_column to avoid permanent columns. Avoid return in the previous row in case
         #type(self).base_columns = self._bc
-
+    
+    def render_best_fdr(self,value):
+        return "%.2g" % value
 
 #from django.views.generic.list import ListView
 #class RealtaListView(ListView):
