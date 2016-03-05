@@ -25,7 +25,7 @@ class Gene(models.Model):
     status = models.CharField(max_length=160)
 
     def __unicode__(self):
-        return self.ensg
+        return u"%s - %s" % (self.ensg, self.name)
 
 class Ontology(models.Model):
     name = models.CharField(max_length=160)
@@ -47,6 +47,9 @@ class ExpressionSource(models.Model):
     name = models.CharField(max_length=160)
     internal_name = models.CharField(max_length=160)
     description = models.TextField(blank=True, null=True)
+
+    def __unicode__(self):
+        return self.name
 
 class GeneFunction(models.Model):
     gene = models.ForeignKey(Gene)

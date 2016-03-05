@@ -16,20 +16,34 @@ class GeneSearchForm(forms.ModelForm):
         model = GeneSearch
         fields = ['gene','expression_source','ontology']
         widgets = {
-                'gene': autocomplete.ModelSelect2(url='dal-gene')
+                'gene': autocomplete.ModelSelect2(url='dal-gene'),
+                'expression_source': forms.CheckboxSelectMultiple(),
+                'ontology': forms.CheckboxSelectMultiple()
         }
 
 def index(request):
     #return HttpResponse('Hello from Python!')
-    form = GeneSearchForm()
+    if request.method == 'POST':
+        form = GeneSearchForm(request.POST)
+        if form.is_valid():
+            gene_search=form.save()
+        redirect("show_gene_search", gene_search=gene_search.pk)
+    else:
+        form = GeneSearchForm()
     return render(request, 'index.html',{'form': form})
+
+def show_gene_search(request, gene_search_pk):
+    gene_search = GeneSearch.objects.get(pk=gene_search_pk)
+    return render(request, 'show_gene_search.html',{'gene_search': gene_search})
+
+
 
 class GeneAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
         qs = Gene.objects.all()
 
         if self.q:
-            qs = qs.filter(ensg__icontains=self.q)
+            qs = qs.filter(name__icontains=self.q)
 
         return qs
 

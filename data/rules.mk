@@ -8,17 +8,21 @@ db_GENES: /raid/molineri/bioinfotree/task/annotations/dataset/ensembl/hsapiens/7
 	| enumerate_rows > $@
 
 db_GeneFunction.max_pk:
-	$(MYSQL)<<<"SELECT MAX(id) from funcpred_genefunction;" > $@
+	$(MYSQL)<<<"SELECT MAX(id) from funcpred_genefunction;" 
+	| bawk '{if($$1=="NULL"){$$1=1} print }'> $@
 
-db_GeneFunction.DO.%: $(DATA_PRJ_ROOT)/DO/%/all/predictions.fdr.gz db_ExpressionSource db_function db_GENES db_GeneFunction.max_pk
-	bawk '$$H<0.05 {print $$GO,$$gene,$$H,$$leave_one_out}' $< \
-	| translate <(bawk '{print $$GO,$$pk}' $^3) 1 \
-	| translate <(bawk '{print $$gene_id,$$pk}' $^4) 2 \
+db_GeneFunction.DO.%: $(DATA_PRJ_ROOT)/DO/%/all/predictions.fdr.gz db_ExpressionSource db_function db_GENES
+	bawk '$$H<0.05 {print $$H,$$GO,$$gene,$$leave_one_out}' $< \
+	| translate <(bawk '{print $$GO,$$pk}' $^3) 2 \
+	| translate <(bawk '{print $$gene_id,$$pk}' $^4) 3 \
 	| append_each_row `bawk '$$4=="$*" {print $$1}' $^2` \
-	| enumerate_rows -s `cat $^5`\
-	| select_columns 1 4 2 3 5 6 > $@
+	| bawk '{tmp=$$4; $$4=$$5; $$5=tmp; print}'\      *scambio due colonne per ordine in db 
+	| enumerate_rows -s `$(MYSQL)<<<"SELECT MAX(id) from funcpred_genefunction;"` > $@
 #echo "LOAD DATA LOCAL INFILE 'db_GENES' INTO TABLE funcpred_gene" | mysql --local-infile -u funcpred -p -h 130.192.147.6 funcpred
 
+db_GeneFunction.LOADED.%: db_GeneFunction.%
+	$(MYSQL)<<<"LOAD DATA LOCAL INFILE '$<' INTO TABLE funcpred_genefunction";
+	touch $@
 
 .META: db_GENES
 	1  pk
