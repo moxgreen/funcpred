@@ -4,7 +4,7 @@ from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django import forms
 from dal import autocomplete
-from .models import GeneSearch, Gene
+from .models import GeneSearch, Gene, GeneFunction
 
 
 class GeneSearchForm(forms.ModelForm):
@@ -34,7 +34,8 @@ def index(request):
 
 def show_gene_search(request, gene_search_pk):
     gene_search = GeneSearch.objects.get(pk=gene_search_pk)
-    return render(request, 'show_gene_search.html',{'gene_search': gene_search})
+    gene_functions = GeneFunction.objects.filter(gene=gene_search.gene, function__ontology__in=gene_search.ontology.all(), expression_source__in=gene_search.expression_source.all())
+    return render(request, 'show_gene_search.html',{'gene_search': gene_search,'gene_functions': gene_functions})
 
 
 
