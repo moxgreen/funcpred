@@ -2,20 +2,36 @@
 from django.utils import timezone
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
-from django.forms import ModelForm
-from .models import GeneSearch
+from django import forms
+from dal import autocomplete
+from .models import GeneSearch, Gene
 
 
-class GeneSearchForm(ModelForm):
+class GeneSearchForm(forms.ModelForm):
+    #gene = forms.ModelChoiceField(
+    #    queryset=Gene.objects.all(),
+    #    widget = autocomplete.ModelSelect2(url='dal-gene')
+    #)
     class Meta:
         model = GeneSearch
         fields = ['gene','expression_source','ontology']
+        widgets = {
+                'gene': autocomplete.ModelSelect2(url='dal-gene')
+        }
 
 def index(request):
     #return HttpResponse('Hello from Python!')
     form = GeneSearchForm()
     return render(request, 'index.html',{'form': form})
 
+class GeneAutocomplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        qs = Gene.objects.all()
+
+        if self.q:
+            qs = qs.filter(ensg__icontains=self.q)
+
+        return qs
 
 #from django.views.generic.list import ListView
 #class RealtaListView(ListView):
