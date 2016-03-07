@@ -40,7 +40,7 @@ class Function(models.Model):
     ontology = models.ForeignKey(Ontology)
 
     def __unicode__(self):
-        return self.keyword
+        return u"%s - %s" % (self.keyword, self.description)
 
 
 class ExpressionSource(models.Model):
@@ -71,7 +71,7 @@ class GeneSearch(models.Model):
     ontology = models.ManyToManyField(Ontology)
 
 class FunctionSearch(models.Model):
-    ontology = models.ForeignKey(Ontology)
+    ontology = models.ForeignKey(Ontology, blank=True, null=True)
     function = models.ForeignKey(Function)
     expression_source = models.ManyToManyField(ExpressionSource)
-    biotype = models.CharField(max_length=14, choices=BIOTYPE_CHOICES)
+    biotype = models.CharField(max_length=14, choices=BIOTYPE_CHOICES, blank=True, null=True)

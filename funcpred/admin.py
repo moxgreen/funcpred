@@ -5,6 +5,7 @@ from .models import *
 
 
 class FunctionAdmin(admin.ModelAdmin):
+    search_fields=("keyword","description")
     list_display=("pk","ontology","keyword","description")
 
 class OntologyAdmin(admin.ModelAdmin):

@@ -39,7 +39,7 @@ class FunctionSearchForm(forms.ModelForm):
         model = FunctionSearch
         fields = ['ontology','function','expression_source','biotype']
         widgets = {
-                'function': autocomplete.ModelSelect2(url='dal-function',forward=['ontology']),
+                'function': autocomplete.ModelSelect2(url='dal-function',forward=['ontology',]),
                 'expression_source': forms.CheckboxSelectMultiple(),
         }
 
@@ -63,8 +63,37 @@ def function_search(request):
         form = FunctionSearchForm()
     return render(request, 'search.html',{'form': form})
 
-def show_function_search(request, gene_search_pk):
-    pass
+def show_function_search(request, function_search_pk):
+    function_search = FunctionSearch.objects.get(pk=function_search_pk)
+    columns = [e.name for e in function_search.expression_source.all()]
+
+    gene_functions = GeneFunction.objects.filter(function=function_search.function, expression_source__in=function_search.expression_source.all())
+
+    # aggregate ####
+    min_fdr=defaultdict(set)
+    has_expression_source=defaultdict(set)
+    for gf in gene_functions:
+        min_fdr[gf.gene.pk].add(gf.fdr)
+        has_expression_source[gf.gene.pk].add(gf.expression_source.name)
+    min_fdr = {k:min(v) for k,v in min_fdr.iteritems()}
+    
+    data=[]
+    for gf in gene_functions:
+        data.append({
+            'gene': gf.gene,
+            'description':gf.gene.description,
+            'best_fdr': min_fdr[gf.function.pk],
+        })
+        for c in columns:
+            v=False
+            if c in has_expression_source[gf.function.pk]:
+                v=True
+            data[-1][c]=v
+    ################
+
+    data.sort(key=itemgetter('best_fdr'))
+    table = GeneFunctionTable(data,dinamically_added_columns=columns)
+    tables.RequestConfig(request,paginate={"per_page": 250}).configure(table)
 
 def show_gene_search(request, gene_search_pk):
     gene_search = GeneSearch.objects.get(pk=gene_search_pk)
@@ -113,6 +142,8 @@ class FunctionAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
         qs = Function.objects.all()
         if self.q:
+            ontology = self.forwarded.get('ontology', None)
+            qs = qs.filter(ontology__pk=int(ontology))
             query1 = reduce(operator.and_, (Q(description__icontains=x) for x in self.q.split()))
             query2 = reduce(operator.and_, (Q(keyword__icontains=x) for x in self.q.split()))
             qs = qs.filter(query1 | query2)
