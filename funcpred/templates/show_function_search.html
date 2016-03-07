@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load static from staticfiles %}
+{% load render_table from django_tables2 %}
+
+{% block main %}
+
+<link rel="stylesheet" href="{% static "django_tables2/themes/paleblue/css/screen.css"%}" />
+
+<div>
+	<h1>Gene search</h1>
+	<ul>
+		<li>function: {{function_search.function}}</li>
+		<li>expression sources:
+			{{gene_search.expression_source.all.0}}
+		</li>
+	</ul>
+</div>
+
+{% render_table table %}
+
+{% endblock%}

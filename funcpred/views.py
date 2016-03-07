@@ -81,8 +81,9 @@ def show_function_search(request, function_search_pk):
     for gf in gene_functions:
         data.append({
             'gene': gf.gene,
+            'biotype': gf.gene.biotype,
             'description':gf.gene.description,
-            'best_fdr': min_fdr[gf.function.pk],
+            'best_fdr': min_fdr[gf.gene.pk],
         })
         for c in columns:
             v=False
@@ -92,8 +93,10 @@ def show_function_search(request, function_search_pk):
     ################
 
     data.sort(key=itemgetter('best_fdr'))
-    table = GeneFunctionTable(data,dinamically_added_columns=columns)
+    table = FunctionTable(data,dinamically_added_columns=columns)
     tables.RequestConfig(request,paginate={"per_page": 250}).configure(table)
+
+    return render(request, 'show_function_search.html',{'function_search': function_search,'gene_functions':gene_functions, 'table': table})
 
 def show_gene_search(request, gene_search_pk):
     gene_search = GeneSearch.objects.get(pk=gene_search_pk)
@@ -126,7 +129,7 @@ def show_gene_search(request, gene_search_pk):
     ################
 
     data.sort(key=itemgetter('best_fdr'))
-    table = GeneFunctionTable(data,dinamically_added_columns=columns)
+    table = GeneTable(data,dinamically_added_columns=columns)
     tables.RequestConfig(request,paginate={"per_page": 250}).configure(table)
 
     return render(request, 'show_gene_search.html',{'gene_search': gene_search,'gene_functions':gene_functions, 'table': table})
@@ -143,13 +146,14 @@ class FunctionAutocomplete(autocomplete.Select2QuerySetView):
         qs = Function.objects.all()
         if self.q:
             ontology = self.forwarded.get('ontology', None)
-            qs = qs.filter(ontology__pk=int(ontology))
+            if ontology is not None:
+                qs = qs.filter(ontology__pk=int(ontology))
             query1 = reduce(operator.and_, (Q(description__icontains=x) for x in self.q.split()))
             query2 = reduce(operator.and_, (Q(keyword__icontains=x) for x in self.q.split()))
             qs = qs.filter(query1 | query2)
         return qs
 
-class GeneFunctionTable(tables.Table):
+class GeneTable(tables.Table):
     function  = tables.Column()
     best_fdr = tables.Column()
 
@@ -159,7 +163,25 @@ class GeneFunctionTable(tables.Table):
         for c in kwargs['dinamically_added_columns']:
             self.base_columns[c] = tables.BooleanColumn()
         del kwargs['dinamically_added_columns']
-        return super(GeneFunctionTable, self).__init__(*args, **kwargs)
+        return super(GeneTable, self).__init__(*args, **kwargs)
+        # restore original base_column to avoid permanent columns. Avoid return in the previous row in case
+        #type(self).base_columns = self._bc
+    
+    def render_best_fdr(self,value):
+        return "%.2g" % value
+
+class FunctionTable(tables.Table):
+    gene  = tables.Column()
+    biotype = tables.Column()
+    best_fdr = tables.Column()
+
+    def __init__(self,*args, **kwargs):#https://github.com/bradleyayers/django-tables2/issues/70
+        # Create a copy of base_columns to restore at the end.
+        #self._bc = copy.deepcopy(self.base_columns)
+        for c in kwargs['dinamically_added_columns']:
+            self.base_columns[c] = tables.BooleanColumn()
+        del kwargs['dinamically_added_columns']
+        return super(FunctionTable, self).__init__(*args, **kwargs)
         # restore original base_column to avoid permanent columns. Avoid return in the previous row in case
         #type(self).base_columns = self._bc
     
