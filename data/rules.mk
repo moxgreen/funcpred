@@ -1,5 +1,5 @@
 DATA_PRJ_ROOT=$(BIOINFO_ROOT)/prj/lncrna2function_clone/dataset/
-DATA_VERSION=gtex_single_tissue_log.GO.noIEA.CC
+DATA_VERSION=gtex_single_tissue_log.GO.noIEA.MF
 MYSQL=mysql --local-infile -BCAN -u funcpred --password=funcpred -h 130.192.147.6 funcpred
 
 db_GENES: /raid/molineri/bioinfotree/task/annotations/dataset/ensembl/hsapiens/73/gene-readable.map.gz

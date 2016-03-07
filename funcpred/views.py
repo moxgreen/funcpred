@@ -132,7 +132,7 @@ def show_gene_search(request, gene_search_pk):
     table = GeneTable(data,dinamically_added_columns=columns)
     tables.RequestConfig(request,paginate={"per_page": 250}).configure(table)
 
-    return render(request, 'show_gene_search.html',{'gene_search': gene_search,'gene_functions':gene_functions, 'table': table})
+    return render(request, 'show_gene_search.html',{'gene_search': gene_search,'gene_functions':gene_functions, 'table': table, 'data': data })
 
 class GeneAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
