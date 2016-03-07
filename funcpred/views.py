@@ -8,9 +8,13 @@ from django import forms
 #from django.core.urlresolvers import reverse
 from dal import autocomplete
 import django_tables2 as tables
+from django.db.models import Q
+import operator
 
-from .models import GeneSearch, Gene, GeneFunction
+from .models import GeneSearch, FunctionSearch, Gene, GeneFunction, Function
 
+def home(request):
+    return render(request, 'home.html')
 
 class GeneSearchForm(forms.ModelForm):
     #gene = forms.ModelChoiceField(
@@ -26,8 +30,20 @@ class GeneSearchForm(forms.ModelForm):
                 'ontology': forms.CheckboxSelectMultiple()
         }
 
-def index(request):
-    #return HttpResponse('Hello from Python!')
+class FunctionSearchForm(forms.ModelForm):
+    #gene = forms.ModelChoiceField(
+    #    queryset=Gene.objects.all(),
+    #    widget = autocomplete.ModelSelect2(url='dal-gene')
+    #)
+    class Meta:
+        model = FunctionSearch
+        fields = ['ontology','function','expression_source','biotype']
+        widgets = {
+                'function': autocomplete.ModelSelect2(url='dal-function',forward=['ontology']),
+                'expression_source': forms.CheckboxSelectMultiple(),
+        }
+
+def gene_search(request):
     if request.method == 'POST':
         form = GeneSearchForm(request.POST)
         if form.is_valid():
@@ -35,7 +51,20 @@ def index(request):
             return redirect("show_gene_search", gene_search_pk=gene_search.pk)
     else:
         form = GeneSearchForm()
-    return render(request, 'index.html',{'form': form})
+    return render(request, 'search.html',{'form': form})
+
+def function_search(request):
+    if request.method == 'POST':
+        form = FunctionSearchForm(request.POST)
+        if form.is_valid():
+            function_search=form.save()
+            return redirect("show_function_search", function_search_pk=function_search.pk)
+    else:
+        form = FunctionSearchForm()
+    return render(request, 'search.html',{'form': form})
+
+def show_function_search(request, gene_search_pk):
+    pass
 
 def show_gene_search(request, gene_search_pk):
     gene_search = GeneSearch.objects.get(pk=gene_search_pk)
@@ -78,6 +107,15 @@ class GeneAutocomplete(autocomplete.Select2QuerySetView):
         qs = Gene.objects.all()
         if self.q:
             qs = qs.filter(name__icontains=self.q)
+        return qs
+
+class FunctionAutocomplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        qs = Function.objects.all()
+        if self.q:
+            query1 = reduce(operator.and_, (Q(description__icontains=x) for x in self.q.split()))
+            query2 = reduce(operator.and_, (Q(keyword__icontains=x) for x in self.q.split()))
+            qs = qs.filter(query1 | query2)
         return qs
 
 class GeneFunctionTable(tables.Table):

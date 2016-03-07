@@ -1,4 +1,5 @@
 DATA_PRJ_ROOT=$(BIOINFO_ROOT)/prj/lncrna2function_clone/dataset/
+DATA_VERSION=gtex_single_tissue_log.GO.noIEA.CC
 MYSQL=mysql --local-infile -BCAN -u funcpred --password=funcpred -h 130.192.147.6 funcpred
 
 db_GENES: /raid/molineri/bioinfotree/task/annotations/dataset/ensembl/hsapiens/73/gene-readable.map.gz
@@ -7,11 +8,7 @@ db_GENES: /raid/molineri/bioinfotree/task/annotations/dataset/ensembl/hsapiens/7
 	| uniq \
 	| enumerate_rows > $@
 
-db_GeneFunction.max_pk:
-	$(MYSQL)<<<"SELECT MAX(id) from funcpred_genefunction;" 
-	| bawk '{if($$1=="NULL"){$$1=1} print }'> $@
-
-db_GeneFunction.DO.%: $(DATA_PRJ_ROOT)/DO/%/all/predictions.fdr.gz db_ExpressionSource db_function db_GENES
+db_GeneFunction.$(DATA_VERSION).%: $(DATA_PRJ_ROOT)/$(DATA_VERSION)/%/all/predictions.fdr.gz db_ExpressionSource db_function db_GENES
 	bawk '$$H<0.05 {print $$H,$$GO,$$gene,$$leave_one_out}' $< \
 	| translate <(bawk '{print $$GO,$$pk}' $^3) 2 \
 	| translate <(bawk '{print $$gene_id,$$pk}' $^4) 3 \
@@ -41,4 +38,11 @@ db_function:
 
 db_ExpressionSource:
 	echo "SELECT * FROM funcpred_expressionsource;" | mysql -BCAN -u funcpred --password=funcpred -h 130.192.147.6 funcpred > $@
+
+
+UPDATE_DO_descriptions:
+	cat /raid/molineri/bioinfotree/task/disease_jensenlab/dataset/160205/*.raw \
+	| cut -f 3,4 | sort | uniq \
+	| bawk '$$2!~"^ENSP"' | bawk '{print "UPDATE funcpred_function SET description=\"" $$2 "\" WHERE keyword=\"" $$1 "\";"}' \
+	| $(MYSQL)
 

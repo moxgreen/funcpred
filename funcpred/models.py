@@ -70,3 +70,8 @@ class GeneSearch(models.Model):
     expression_source = models.ManyToManyField(ExpressionSource)
     ontology = models.ManyToManyField(Ontology)
 
+class FunctionSearch(models.Model):
+    ontology = models.ForeignKey(Ontology)
+    function = models.ForeignKey(Function)
+    expression_source = models.ManyToManyField(ExpressionSource)
+    biotype = models.CharField(max_length=14, choices=BIOTYPE_CHOICES)

@@ -6,7 +6,6 @@ from .models import *
 
 class FunctionAdmin(admin.ModelAdmin):
     list_display=("pk","ontology","keyword","description")
-    pass
 
 class OntologyAdmin(admin.ModelAdmin):
     list_display=("pk","name")
