@@ -13,9 +13,6 @@ import operator
 
 from .models import GeneSearch, FunctionSearch, Gene, GeneFunction, Function
 
-def home(request):
-    return render(request, 'home.html')
-
 class GeneSearchForm(forms.ModelForm):
     #gene = forms.ModelChoiceField(
     #    queryset=Gene.objects.all(),
@@ -26,7 +23,7 @@ class GeneSearchForm(forms.ModelForm):
         fields = ['gene','expression_source','ontology']
         widgets = {
                 'gene': autocomplete.ModelSelect2(url='dal-gene'),
-                'expression_source': forms.CheckboxSelectMultiple(),
+                #'expression_source': forms.CheckboxSelectMultiple(),
                 'ontology': forms.CheckboxSelectMultiple()
         }
 
@@ -42,6 +39,9 @@ class FunctionSearchForm(forms.ModelForm):
                 'function': autocomplete.ModelSelect2(url='dal-function',forward=['ontology',]),
                 'expression_source': forms.CheckboxSelectMultiple(),
         }
+
+def home(request):
+    return render(request, 'home.html')
 
 def gene_search(request):
     if request.method == 'POST':
