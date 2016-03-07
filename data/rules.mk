@@ -41,8 +41,8 @@ db_ExpressionSource:
 
 
 UPDATE_DO_descriptions:
-	cat /raid/molineri/bioinfotree/task/disease_jensenlab/dataset/160205/*.raw \
-	| cut -f 3,4 | sort | uniq \
+	zcat /raid/molineri/bioinfotree/task/annotations/dataset/disease_ontology/do_ensg_inclusive.gz \
+	| cut -f 2,3 | sort | uniq \
 	| bawk '$$2!~"^ENSP"' | bawk '{print "UPDATE funcpred_function SET description=\"" $$2 "\" WHERE keyword=\"" $$1 "\";"}' \
 	| $(MYSQL)
 
