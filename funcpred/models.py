@@ -63,7 +63,7 @@ class GeneFunction(models.Model):
         unique_together = (("gene", "function", "expression_source"),)
     
     def __unicode__(self):
-        return "%s\t%s\t%g\t%s" % (gene,function,fdr,predictior)
+        return "%s\t%s\t%g\t%s" % (self.gene.pk,self.function.pk,fdr,self.expression_source.pk)
 
 class GeneSearch(models.Model):
     gene = models.ForeignKey(Gene)
