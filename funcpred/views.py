@@ -7,7 +7,6 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django import forms
 #from django.core.urlresolvers import reverse
 from dal import autocomplete
-#import django_tables2 as tables
 from django.db.models import Q
 import operator
 
@@ -93,10 +92,8 @@ def show_function_search(request, function_search_pk):
     ################
 
     data.sort(key=itemgetter('best_fdr'))
-    table = FunctionTable(data,dinamically_added_columns=columns)
-    #tables.RequestConfig(request,paginate={"per_page": 250}).configure(table)
 
-    return render(request, 'show_function_search.html',{'function_search': function_search,'gene_functions':gene_functions, 'table': table})
+    return render(request, 'show_function_search.html',{'function_search': function_search,'gene_functions':gene_functions})
 
 def show_gene_search(request, gene_search_pk):
     gene_search = GeneSearch.objects.get(pk=gene_search_pk)
@@ -129,10 +126,8 @@ def show_gene_search(request, gene_search_pk):
     ################
 
     data.sort(key=itemgetter('best_fdr'))
-    table = GeneTable(data,dinamically_added_columns=columns)
-    #tables.RequestConfig(request,paginate={"per_page": 250}).configure(table)
 
-    return render(request, 'show_gene_search.html',{'gene_search': gene_search,'gene_functions':gene_functions, 'table': table, 'data': data })
+    return render(request, 'show_gene_search.html',{'gene_search': gene_search,'gene_functions':gene_functions, 'data': data })
 
 class GeneAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
@@ -152,41 +147,6 @@ class FunctionAutocomplete(autocomplete.Select2QuerySetView):
             query2 = reduce(operator.and_, (Q(keyword__icontains=x) for x in self.q.split()))
             qs = qs.filter(query1 | query2)
         return qs
-
-class GeneTable(tables.Table):
-    function  = tables.Column()
-    best_fdr = tables.Column()
-
-    def __init__(self,*args, **kwargs):#https://github.com/bradleyayers/django-tables2/issues/70
-        # Create a copy of base_columns to restore at the end.
-        #self._bc = copy.deepcopy(self.base_columns)
-        for c in kwargs['dinamically_added_columns']:
-            self.base_columns[c] = tables.BooleanColumn()
-        del kwargs['dinamically_added_columns']
-        return super(GeneTable, self).__init__(*args, **kwargs)
-        # restore original base_column to avoid permanent columns. Avoid return in the previous row in case
-        #type(self).base_columns = self._bc
-    
-    def render_best_fdr(self,value):
-        return "%.2g" % value
-
-class FunctionTable(tables.Table):
-    gene  = tables.Column()
-    biotype = tables.Column()
-    best_fdr = tables.Column()
-
-    def __init__(self,*args, **kwargs):#https://github.com/bradleyayers/django-tables2/issues/70
-        # Create a copy of base_columns to restore at the end.
-        #self._bc = copy.deepcopy(self.base_columns)
-        for c in kwargs['dinamically_added_columns']:
-            self.base_columns[c] = tables.BooleanColumn()
-        del kwargs['dinamically_added_columns']
-        return super(FunctionTable, self).__init__(*args, **kwargs)
-        # restore original base_column to avoid permanent columns. Avoid return in the previous row in case
-        #type(self).base_columns = self._bc
-    
-    def render_best_fdr(self,value):
-        return "%.2g" % value
 
 #from django.views.generic.list import ListView
 #class RealtaListView(ListView):
