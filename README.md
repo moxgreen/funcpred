@@ -11,6 +11,7 @@ Make sure you have Python [installed properly](http://install.python-guide.org).
 ```sh
 $ git clone git@github.com:moxgreen/funcpred.git
 $ sudo apt-get install libmysqlclient-dev
+$ sudo apt-get install python-dev
 $ cd python-getting-started
 
 $ pip install -r requirements.txt
