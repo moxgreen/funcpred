@@ -7,7 +7,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django import forms
 #from django.core.urlresolvers import reverse
 from dal import autocomplete
-import django_tables2 as tables
+#import django_tables2 as tables
 from django.db.models import Q
 import operator
 
@@ -94,7 +94,7 @@ def show_function_search(request, function_search_pk):
 
     data.sort(key=itemgetter('best_fdr'))
     table = FunctionTable(data,dinamically_added_columns=columns)
-    tables.RequestConfig(request,paginate={"per_page": 250}).configure(table)
+    #tables.RequestConfig(request,paginate={"per_page": 250}).configure(table)
 
     return render(request, 'show_function_search.html',{'function_search': function_search,'gene_functions':gene_functions, 'table': table})
 
@@ -130,7 +130,7 @@ def show_gene_search(request, gene_search_pk):
 
     data.sort(key=itemgetter('best_fdr'))
     table = GeneTable(data,dinamically_added_columns=columns)
-    tables.RequestConfig(request,paginate={"per_page": 250}).configure(table)
+    #tables.RequestConfig(request,paginate={"per_page": 250}).configure(table)
 
     return render(request, 'show_gene_search.html',{'gene_search': gene_search,'gene_functions':gene_functions, 'table': table, 'data': data })
 
