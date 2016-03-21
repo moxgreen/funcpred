@@ -10,7 +10,7 @@ from dal import autocomplete
 from django.db.models import Q
 import operator
 
-from .models import GeneSearch, FunctionSearch, Gene, GeneFunction, Function
+from .models import GeneSearch, FunctionSearch, Gene, GeneFunction, Function, Ontology
 
 class GeneSearchForm(forms.ModelForm):
     #gene = forms.ModelChoiceField(
@@ -36,11 +36,26 @@ class FunctionSearchForm(forms.ModelForm):
         fields = ['ontology','function','expression_source','biotype']
         widgets = {
                 'function': autocomplete.ModelSelect2(url='dal-function',forward=['ontology',]),
-                'expression_source': forms.CheckboxSelectMultiple(),
         }
 
 def home(request):
     return render(request, 'home.html')
+
+def browse_ontologies(request):
+    ontologies=Ontology.objects.all()
+    return render(request, 'browse_ontologies.html',{'ontologies': ontologies})
+
+def browse_functions(request, ontology_pk):
+    functions=Function.objects.filter(ontology=int(ontology_pk))
+    return render(request, 'browse_functions.html',{'functions': functions})
+
+def make_basic_function_search(request, function_pk):
+    fs=FunctionSearch.objects.create(function=Function.objects.get(pk=int(function_pk)))
+    fs.expression_source.add(1)
+
+    return show_function_search(request,function_search_pk=fs.pk)
+    
+
 
 def gene_search(request):
     if request.method == 'POST':
@@ -64,9 +79,31 @@ def function_search(request):
 
 def show_function_search(request, function_search_pk):
     function_search = FunctionSearch.objects.get(pk=function_search_pk)
-    columns = [e.name for e in function_search.expression_source.all()]
-
+    exp_sources = [e.name for e in function_search.expression_source.all()]
     gene_functions = GeneFunction.objects.filter(function=function_search.function, expression_source__in=function_search.expression_source.all())
+    if function_search.biotype:
+        gene_functions = gene_functions.filter(biotype=function_search.biotype)
+    #return render(request, 'show_gene_search.html',{'gene_search': gene_search,'gene_functions':gene_functions})
+    
+    # aggregate ####
+    min_fdr=defaultdict(set)
+    has_expression_source=defaultdict(set)
+    for gf in gene_functions:
+        min_fdr[gf.gene.pk].add(gf.fdr)
+        has_expression_source[gf.gene.pk].add(gf.expression_source.name)
+    min_fdr = {k:min(v) for k,v in min_fdr.iteritems()}
+    
+    data=[]
+    for gf in gene_functions:
+        data.append({
+            'gene': gf.gene,
+            'best_fdr': "%.2g" % min_fdr[gf.gene.pk],
+            'exp_sources': ( e in has_expression_source[gf.gene.pk] for e in exp_sources)
+        })
+    ################
+
+    return render(request, 'show_function_search.html',{'function_search': function_search,'gene_functions':gene_functions, 'data': data , 'exp_sources': exp_sources})
+
 
     # aggregate ####
     min_fdr=defaultdict(set)

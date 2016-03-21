@@ -1,21 +1,51 @@
 {% extends "base.html" %}
 {% load static from staticfiles %}
-{% load render_table from django_tables2 %}
 
 {% block main %}
 
-<link rel="stylesheet" href="{% static "django_tables2/themes/paleblue/css/screen.css"%}" />
+
 
 <div>
-	<h1>Gene search</h1>
+	<h1>Function search</h1>
 	<ul>
-		<li>function: {{function_search.function}}</li>
+		<li>function: <strong>{{function_search.function}}</strong></li>
 		<li>expression sources:
-			{{gene_search.expression_source.all.0}}
+			{%for e in exp_sources%}
+			<strong>{{e}}</strong>,
+			{%endfor%}
+		</li>
+		<li>biotype: <strong>{{function_search.biotype|default:"all"}}</strong>
 		</li>
 	</ul>
 </div>
 
-{% render_table table %}
+<table id="data_table" class="display" width="100%" cellspacing="0" data-order_col="5">
+	<thead>
+		<tr>
+			<th>gene id</th>
+			<th>gene name</th>
+			<th>biotype</th>
+			<th>description</th>
+			<th>fdr</th>
+			{%for v in exp_sources %}
+			<th>{{v}}</th>
+			{%endfor%}
+		</tr>
+	</thead>
+	<tbody>
+{% for row in data%}
+	<tr>
+		<td>{{row.gene.ensg}}</td>
+		<td>{{row.gene.name}}</td>
+		<td>{{row.gene.biotype}}</td>
+		<td>{{row.gene.description}}</td>
+		<td>{{row.best_fdr}}</td>
+		{%for v in row.exp_sources %}
+			<td>{% if v %} &#11035; {%endif%}</td>
+		{%endfor%}
+	</tr>
+	{%endfor%}
+	</tbody>
+</table>
 
 {% endblock%}

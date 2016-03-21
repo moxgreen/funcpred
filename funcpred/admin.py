@@ -12,6 +12,7 @@ class OntologyAdmin(admin.ModelAdmin):
     list_display=("pk","name")
 
 class GeneAdmin(admin.ModelAdmin):
+    search_fields=("ensg","description")
     list_display=("pk","ensg","name")
 
 class GeneAliasAdmin(admin.ModelAdmin):
@@ -25,6 +26,10 @@ class GeneSearchAdmin(admin.ModelAdmin):
     raw_id_fields=('gene',)
     list_display=("pk","gene")
 
+class FunctionSearchAdmin(admin.ModelAdmin):
+    raw_id_fields=('function',)
+    list_display=("pk","function")
+
 class GeneFunctionAdmin(admin.ModelAdmin):
     raw_id_fields=('gene','function')
     list_display=("pk","gene","function","expression_source","fdr")
@@ -36,4 +41,5 @@ admin.site.register(Gene, GeneAdmin)
 admin.site.register(GeneAlias, GeneAliasAdmin)
 admin.site.register(ExpressionSource, ExpressionSourceAdmin)
 admin.site.register(GeneSearch, GeneSearchAdmin)
+admin.site.register(FunctionSearch, FunctionSearchAdmin)
 admin.site.register(GeneFunction, GeneFunctionAdmin)
