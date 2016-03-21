@@ -3,7 +3,6 @@
 
 {% block main %}
 
-<link rel="stylesheet" href="{% static "django_tables2/themes/paleblue/css/screen.css"%}" />
 
 <div>
 	<h1>Gene search</h1>
@@ -17,5 +16,15 @@
 		</li>
 	</ul>
 </div>
+
+<table>
+{% for row in data%}
+	<tr>
+		{%for k,v in row.iteritems %}
+			<td>{{v}}</td>
+		{%endfor%}
+	</tr>
+	{%endfor%}
+</table>
 
 {% endblock%}
