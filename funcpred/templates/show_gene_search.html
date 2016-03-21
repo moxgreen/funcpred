@@ -8,29 +8,42 @@
 <div>
 	<h1>Gene search</h1>
 	<ul>
-		<li>gene: {{gene_search.gene}}</li>
+		<li>gene: <strong>{{gene_search.gene}}</strong></li>
 		<li>expression sources:
-			{{gene_search.expression_source.all.0}}
+			{%for e in exp_sources%}
+			<strong>{{e}}</strong>,
+			{%endfor%}
 		</li>
-		<li>ontologies:
-			{{gene_search.ontology.all.0}}
+		<li>function categories:
+			<ul>
+			{%for o in gene_search.ontology.all%}
+				<li><strong>{{o}}</strong>: {{o.description}}</li>
+			{%endfor%}
+			</ul>
 		</li>
 	</ul>
 </div>
 
-<table id="data_table">
+<table id="data_table" class="display" width="100%" cellspacing="0">
 	<thead>
 		<tr>
-			<th>function</th>
-			<th>FDR</th>
-			<th>cioa</th>
-			<th>cioa</th>
+			<th>keyword</th>
+			<th>category</th>
+			<th>description</th>
+			<th>fdr</th>
+			{%for v in exp_sources %}
+			<th>{{v}}</th>
+			{%endfor%}
 		</tr>
 	</thead>
 	<tbody>
 {% for row in data%}
 	<tr>
-		{%for k,v in row.iteritems %}
+		<td>{{row.function.keyword}}</td>
+		<td>{{row.function.ontology}}</td>
+		<td>{{row.function.description}}</td>
+		<td>{{row.best_fdr}}</td>
+		{%for v in row.exp_sources %}
 			<td>{{v}}</td>
 		{%endfor%}
 	</tr>

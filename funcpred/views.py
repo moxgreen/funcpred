@@ -97,7 +97,7 @@ def show_function_search(request, function_search_pk):
 
 def show_gene_search(request, gene_search_pk):
     gene_search = GeneSearch.objects.get(pk=gene_search_pk)
-    columns = [e.name for e in gene_search.expression_source.all()]
+    exp_sources = [e.name for e in gene_search.expression_source.all()]
 
 
     gene_functions = GeneFunction.objects.filter(gene=gene_search.gene, function__ontology__in=gene_search.ontology.all(), expression_source__in=gene_search.expression_source.all())
@@ -115,19 +115,14 @@ def show_gene_search(request, gene_search_pk):
     for gf in gene_functions:
         data.append({
             'function': gf.function,
-            'description':gf.function.description,
-            'best_fdr': min_fdr[gf.function.pk],
+            'best_fdr': "%.2g" % min_fdr[gf.function.pk],
+            'exp_sources': ( e in has_expression_source[gf.function.pk] for e in exp_sources)
         })
-        for c in columns:
-            v=False
-            if c in has_expression_source[gf.function.pk]:
-                v=True
-            data[-1][c]=v
     ################
 
-    data.sort(key=itemgetter('best_fdr'))
+    #data.sort(key=itemgetter('best_fdr'))#sorting made by js in data_table
 
-    return render(request, 'show_gene_search.html',{'gene_search': gene_search,'gene_functions':gene_functions, 'data': data })
+    return render(request, 'show_gene_search.html',{'gene_search': gene_search,'gene_functions':gene_functions, 'data': data , 'exp_sources': exp_sources})
 
 class GeneAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
