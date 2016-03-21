@@ -4,6 +4,7 @@
 {% block main %}
 
 
+
 <div>
 	<h1>Gene search</h1>
 	<ul>
@@ -17,7 +18,16 @@
 	</ul>
 </div>
 
-<table>
+<table id="data_table">
+	<thead>
+		<tr>
+			<th>function</th>
+			<th>FDR</th>
+			<th>cioa</th>
+			<th>cioa</th>
+		</tr>
+	</thead>
+	<tbody>
 {% for row in data%}
 	<tr>
 		{%for k,v in row.iteritems %}
@@ -25,6 +35,7 @@
 		{%endfor%}
 	</tr>
 	{%endfor%}
+	</tbody>
 </table>
 
 {% endblock%}
