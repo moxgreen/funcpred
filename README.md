@@ -50,3 +50,5 @@ For more information about using Python on Heroku, see these Dev Center articles
 xavier:/raid/molineri/bioinfotree/prj/lncrna2function_clone/dataset/gtex_single_tissue_log.GO.noIEA.BP/all_tissues
 $ echo "LOAD DATA LOCAL INFILE 'db_Function.2' INTO TABLE funcpred_function" | mysql --local-infile -u funcpred -p -h 130.192.147.6 funcpred
 
+# configurazione apache
+vedi il file apache.conf 
