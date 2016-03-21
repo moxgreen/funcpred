@@ -50,7 +50,7 @@ def gene_search(request):
             return redirect("show_gene_search", gene_search_pk=gene_search.pk)
     else:
         form = GeneSearchForm()
-    return render(request, 'search.html',{'form': form})
+    return render(request, 'search_gene.html',{'form': form})
 
 def function_search(request):
     if request.method == 'POST':
@@ -60,7 +60,7 @@ def function_search(request):
             return redirect("show_function_search", function_search_pk=function_search.pk)
     else:
         form = FunctionSearchForm()
-    return render(request, 'search.html',{'form': form})
+    return render(request, 'search_function.html',{'form': form})
 
 def show_function_search(request, function_search_pk):
     function_search = FunctionSearch.objects.get(pk=function_search_pk)

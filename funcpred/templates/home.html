@@ -1,7 +1,28 @@
 {% extends "base.html" %}
 
 {% block main %}
-<h1>HOMEPAGE</h1>
-<p><a href="/funcpred/gene_search">gene search</a></p>
-<p><a href="/funcpred/function_search">function search</a></p>
+      <!-- Example row of columns -->
+      <div class="row">
+        <div class="col-md-6">
+		<h2>Search by gene</h2>
+		<p><a href="/funcpred/gene_search">gene search</a></p>
+        </div>
+        <div class="col-md-6">
+		<h2>Search by function</h2>
+		<p><a href="/funcpred/function_search">function search</a></p>
+        </div>
+      </div>
+
+      <hr>
+      <div class="row">
+        <div class="col-md-6">
+	  <a href="http://www.mbc.unito.it/en/research/research-areas/basic-and-applied-research/unita-di-biologia-computazionale"><img src="http://www.mbc.unito.it/sites/x027/files/logo_unito.jpg"></a>
+       </div>
+        <div class="col-md-6">
+          <h2>Update</h2>
+	  {% include "mailchimp_form.html" %}
+        </div>
+      </div>
+
+      <hr>
 {% endblock%}
