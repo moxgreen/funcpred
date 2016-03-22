@@ -1,5 +1,5 @@
 DATA_PRJ_ROOT=$(BIOINFO_ROOT)/prj/lncrna2function_clone/dataset/
-DATA_VERSION?=gtex_single_tissue_log.GO.noIEA.BP
+DATA_VERSION=gtex_single_tissue_log.GO.noIEA.BP
 MYSQL=mysql --local-infile -BCAN -u funcpred --password=funcpred -h 130.192.147.6 funcpred
 H_CUTOFF?=0.05
 
@@ -8,6 +8,15 @@ db_GENES: /raid/molineri/bioinfotree/task/annotations/dataset/ensembl/hsapiens/7
 		print $$gene_id, $$gene_name, $$biotype, $$description, $$status}' $< \
 	| uniq \
 	| enumerate_rows > $@
+
+db_function.gtex_single_tissue_log.GO.noIEA.BP: $(DATA_PRJ_ROOT)/gtex_single_tissue_log.GO.noIEA.BP/all_tissues/GO.gz $(BIOINFO_ROOT)/task/annotations/dataset/GO/ebi/140311/go_term.gz
+	zcat $< | cut -f 2 | uniq | sort | uniq | translate -a <(zcat $^2 | cut -f 1,2) 1 \
+	| append_each_row 1 \
+	| enumerate_rows -s `cut -f 1 db_function* | stat_base -b | sed 's/.0$$//'` > $@
+
+db_function.LOADED.%: db_function.%
+	$(MYSQL)<<<"LOAD DATA LOCAL INFILE '$<' INTO TABLE funcpred_function";
+	touch $@
 
 db_GeneFunction.$(DATA_VERSION).%: $(DATA_PRJ_ROOT)/$(DATA_VERSION)/%/all/predictions.fdr.gz db_ExpressionSource db_function db_GENES
 	bawk '$$H<$(H_CUTOFF) {print $$H,$$GO,$$gene,$$leave_one_out}' $< \
@@ -31,14 +40,14 @@ db_GeneFunction.LOADED.%: db_GeneFunction.%
 	6  status       NOVEL
 
 db_function:
-	echo "SELECT * FROM funcpred_function;" | mysql -BCAN -u funcpred -p -h 130.192.147.6 funcpred > $@
+	echo "SELECT * FROM funcpred_function;" | $(MYSQL) > $@
 
 .META: db_function
 	1	pk
 	2	GO
 
 db_ExpressionSource:
-	echo "SELECT * FROM funcpred_expressionsource;" | mysql -BCAN -u funcpred --password=funcpred -h 130.192.147.6 funcpred > $@
+	echo "SELECT * FROM funcpred_expressionsource;" | $(MYSQL) > $@
 
 
 UPDATE_DO_descriptions:
