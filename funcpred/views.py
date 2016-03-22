@@ -26,6 +26,21 @@ class GeneSearchForm(forms.ModelForm):
                 'ontology': forms.CheckboxSelectMultiple()
         }
 
+class QuickGeneSearchForm(forms.ModelForm):
+    #gene = forms.ModelChoiceField(
+    #    queryset=Gene.objects.all(),
+    #    widget = autocomplete.ModelSelect2(url='dal-gene')
+    #)
+    class Meta:
+        model = GeneSearch
+        fields = ['gene']
+        labels = {
+            'gene': "",
+        }
+        widgets = {
+                'gene': autocomplete.ModelSelect2(url='dal-gene'),
+        }
+
 class FunctionSearchForm(forms.ModelForm):
     #gene = forms.ModelChoiceField(
     #    queryset=Gene.objects.all(),
@@ -39,7 +54,14 @@ class FunctionSearchForm(forms.ModelForm):
         }
 
 def home(request):
-    return render(request, 'home.html')
+    form = QuickGeneSearchForm(request.POST)
+    if request.method == 'POST':
+        form = QuickGeneSearchForm(request.POST)
+        if form.is_valid():
+            gene_search=form.save()
+            gene_search.expression_source.add(1)
+            return redirect("show_gene_search", gene_search_pk=gene_search.pk)
+    return render(request, 'home.html',{'form': form})
 
 def browse_ontologies(request):
     ontologies=Ontology.objects.all()
@@ -137,7 +159,9 @@ def show_gene_search(request, gene_search_pk):
     exp_sources = [e.name for e in gene_search.expression_source.all()]
 
 
-    gene_functions = GeneFunction.objects.filter(gene=gene_search.gene, function__ontology__in=gene_search.ontology.all(), expression_source__in=gene_search.expression_source.all())
+    gene_functions = GeneFunction.objects.filter(gene=gene_search.gene, expression_source__in=gene_search.expression_source.all())
+    if gene_search.ontology.count():
+        gene_functions = gene_functions.filter(function__ontology__in=gene_search.ontology.all())
     #return render(request, 'show_gene_search.html',{'gene_search': gene_search,'gene_functions':gene_functions})
     
     # aggregate ####
@@ -153,13 +177,18 @@ def show_gene_search(request, gene_search_pk):
         data.append({
             'function': gf.function,
             'best_fdr': "%.2g" % min_fdr[gf.function.pk],
-            'exp_sources': ( e in has_expression_source[gf.function.pk] for e in exp_sources)
         })
+        if len(exp_sources)>1:
+            data[-1]['exp_sources'] = ( e in has_expression_source[gf.function.pk] for e in exp_sources)
     ################
+
+    exp_sources_top=exp_sources
+    if len(exp_sources)==1:
+        exp_sources=[]
 
     #data.sort(key=itemgetter('best_fdr'))#sorting made by js in data_table
 
-    return render(request, 'show_gene_search.html',{'gene_search': gene_search,'gene_functions':gene_functions, 'data': data , 'exp_sources': exp_sources})
+    return render(request, 'show_gene_search.html',{'gene_search': gene_search,'gene_functions':gene_functions, 'data': data , 'exp_sources': exp_sources,'exp_sources_top':exp_sources_top})
 
 class GeneAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):

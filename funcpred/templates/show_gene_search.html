@@ -13,11 +13,11 @@
 			{%endfor%}
 		</li>
 		<li>function categories:
-			<ul>
 			{%for o in gene_search.ontology.all%}
-				<li><strong>{{o}}</strong>: {{o.description}}</li>
+				<strong>{{o}},</strong>
+			{% empty %}
+				<strong>All</strong>
 			{%endfor%}
-			</ul>
 		</li>
 	</ul>
 </div>
@@ -42,7 +42,7 @@
 		<td>{{row.function.description}}</td>
 		<td>{{row.best_fdr}}</td>
 		{%for v in row.exp_sources %}
-			<td>{{v}}</td>
+			<td>{% if v %} &#11035; {%endif%}</td>
 		{%endfor%}
 	</tr>
 	{%endfor%}
