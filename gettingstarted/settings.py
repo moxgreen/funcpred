@@ -82,9 +82,9 @@ WSGI_APPLICATION = 'gettingstarted.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'funcpred',
-        'USER': 'root',
-        'PASSWORD': '***REMOVED***',
+        'NAME': 'funcpred2',
+        'USER': 'funcpred2',
+        'PASSWORD': 'funcpred',
         'HOST': '127.0.0.1',
         'PORT': '3306',
     }
