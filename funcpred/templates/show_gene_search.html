@@ -2,13 +2,18 @@
 {% block main %}
 
 
+<style>
+.known{
+	color: red;
+}
+</style>
 
 <div>
 	<h1>Gene search</h1>
 	<ul>
 		<li>gene: <strong>{{gene_search.gene}}</strong></li>
 		<li>expression sources:
-			{%for e in exp_sources%}
+			{%for e in exp_sources_top%}
 			<strong>{{e}}</strong>,
 			{%endfor%}
 		</li>
@@ -37,7 +42,7 @@
 	<tbody>
 {% for row in data%}
 	<tr>
-		<td>{{row.function.keyword}}</td>
+		<td {%if row.known%}class="known"{%endif%}>{{row.function.keyword}}</td>
 		<td>{{row.function.ontology}}</td>
 		<td>{{row.function.description}}</td>
 		<td>{{row.best_fdr}}</td>

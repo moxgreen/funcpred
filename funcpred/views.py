@@ -119,40 +119,18 @@ def show_function_search(request, function_search_pk):
     for gf in gene_functions:
         data.append({
             'gene': gf.gene,
+            'known': gf.known,
             'best_fdr': "%.2g" % min_fdr[gf.gene.pk],
-            'exp_sources': ( e in has_expression_source[gf.gene.pk] for e in exp_sources)
         })
+        if len(exp_sources)>1:
+           data[-1]['exp_sources'] = ( e in has_expression_source[gf.gene.pk] for e in exp_sources)
     ################
 
-    return render(request, 'show_function_search.html',{'function_search': function_search,'gene_functions':gene_functions, 'data': data , 'exp_sources': exp_sources})
+    exp_sources_top=exp_sources
+    if len(exp_sources)==1:
+        exp_sources=[]
 
-
-    # aggregate ####
-    min_fdr=defaultdict(set)
-    has_expression_source=defaultdict(set)
-    for gf in gene_functions:
-        min_fdr[gf.gene.pk].add(gf.fdr)
-        has_expression_source[gf.gene.pk].add(gf.expression_source.name)
-    min_fdr = {k:min(v) for k,v in min_fdr.iteritems()}
-    
-    data=[]
-    for gf in gene_functions:
-        data.append({
-            'gene': gf.gene,
-            'biotype': gf.gene.biotype,
-            'description':gf.gene.description,
-            'best_fdr': min_fdr[gf.gene.pk],
-        })
-        for c in columns:
-            v=False
-            if c in has_expression_source[gf.function.pk]:
-                v=True
-            data[-1][c]=v
-    ################
-
-    data.sort(key=itemgetter('best_fdr'))
-
-    return render(request, 'show_function_search.html',{'function_search': function_search,'gene_functions':gene_functions})
+    return render(request, 'show_function_search.html',{'function_search': function_search,'gene_functions':gene_functions, 'data': data , 'exp_sources_top': exp_sources_top, 'exp_sources': exp_sources})
 
 def show_gene_search(request, gene_search_pk):
     gene_search = GeneSearch.objects.get(pk=gene_search_pk)
@@ -176,6 +154,7 @@ def show_gene_search(request, gene_search_pk):
     for gf in gene_functions:
         data.append({
             'function': gf.function,
+            'known': gf.known,
             'best_fdr': "%.2g" % min_fdr[gf.function.pk],
         })
         if len(exp_sources)>1:

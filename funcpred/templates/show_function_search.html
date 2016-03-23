@@ -4,6 +4,12 @@
 {% block main %}
 
 
+<style>
+.known{
+	color: red;
+}
+</style>
+
 
 <div>
 	<h1>Function search</h1>
@@ -14,7 +20,7 @@
 			<strong>{{e}}</strong>,
 			{%endfor%}
 		</li>
-		<li>biotype: <strong>{{function_search.biotype|default:"all"}}</strong>
+		<li>biotype: <strong>{{function_search.biotype|default:"All"}}</strong>
 		</li>
 	</ul>
 </div>
@@ -35,7 +41,7 @@
 	<tbody>
 {% for row in data%}
 	<tr>
-		<td>{{row.gene.ensg}}</td>
+		<td {%if row.known%}class="known"{%endif%}>{{row.gene.ensg}}</td>
 		<td>{{row.gene.name}}</td>
 		<td>{{row.gene.biotype}}</td>
 		<td>{{row.gene.description}}</td>
