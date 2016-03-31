@@ -123,7 +123,7 @@ def show_function_search(request, function_search_pk):
             'best_fdr': "%.2g" % min_fdr[gf.gene.pk],
         })
         if len(exp_sources)>1:
-           data[-1]['exp_sources'] = ( e in has_expression_source[gf.gene.pk] for e in exp_sources)
+           data[-1]['exp_sources'] = [ e in has_expression_source[gf.gene.pk] for e in exp_sources]
     ################
 
     exp_sources_top=exp_sources
@@ -158,7 +158,7 @@ def show_gene_search(request, gene_search_pk):
             'best_fdr': "%.2g" % min_fdr[gf.function.pk],
         })
         if len(exp_sources)>1:
-            data[-1]['exp_sources'] = ( e in has_expression_source[gf.function.pk] for e in exp_sources)
+            data[-1]['exp_sources'] = [ e in has_expression_source[gf.function.pk] for e in exp_sources]
     ################
 
     exp_sources_top=exp_sources
