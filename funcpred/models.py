@@ -65,13 +65,21 @@ class GeneFunction(models.Model):
     def __unicode__(self):
         return "%s\t%s\t%g\t%s" % (self.gene,self.function,self.fdr,self.expression_source)
 
-class GeneSearch(models.Model):
+class Session(models.Model):
+    ip_address = models.GenericIPAddressField(blank=True, null=True, default=None)
+    
+class Search(models.Model):
+    session = models.ForeignKey(Session,blank=True, null=True)
+    class Meta:
+        abstract = True
+
+class GeneSearch(Search):
     gene = models.ForeignKey(Gene)
-    expression_source = models.ManyToManyField(ExpressionSource)
     ontology = models.ManyToManyField(Ontology)
+    expression_source = models.ManyToManyField(ExpressionSource)
 
 class FunctionSearch(models.Model):
     ontology = models.ForeignKey(Ontology, blank=True, null=True)
     function = models.ForeignKey(Function)
-    expression_source = models.ManyToManyField(ExpressionSource)
     biotype = models.CharField(max_length=14, choices=BIOTYPE_CHOICES, blank=True, null=True)
+    expression_source = models.ManyToManyField(ExpressionSource)
