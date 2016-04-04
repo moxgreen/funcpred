@@ -10,7 +10,7 @@ from dal import autocomplete
 from django.db.models import Q
 import operator
 
-from .models import GeneSearch, FunctionSearch, Gene, GeneFunction, Function, Ontology
+from .models import GeneSearch, FunctionSearch, Gene, GeneFunction, Function, Ontology, Session
 
 class GeneSearchForm(forms.ModelForm):
     #gene = forms.ModelChoiceField(
@@ -56,10 +56,12 @@ class FunctionSearchForm(forms.ModelForm):
 def home(request):
     form = QuickGeneSearchForm(request.POST)
     if request.method == 'POST':
-        form = QuickGeneSearchForm(request.POST)
+        s = Session.objects.get_or_create(session_id=request.session._get_or_create_session_key(), ip_address=request.META.get('REMOTE_ADDR'))
+        form = QuickGeneSearchForm(request.POST, initial={"session": s})
         if form.is_valid():
             gene_search=form.save()
             gene_search.expression_source.add(1)
+
             return redirect("show_gene_search", gene_search_pk=gene_search.pk)
     return render(request, 'home.html',{'form': form})
 
@@ -72,7 +74,8 @@ def browse_functions(request, ontology_pk):
     return render(request, 'browse_functions.html',{'functions': functions})
 
 def make_basic_function_search(request, function_pk):
-    fs=FunctionSearch.objects.create(function=Function.objects.get(pk=int(function_pk)))
+    s = Session.objects.get_or_create(session_id=request.session._get_or_create_session_key(), ip_address=request.META.get('REMOTE_ADDR'))
+    fs=FunctionSearch.objects.create(function=Function.objects.get(pk=int(function_pk)), session=s[0])
     fs.expression_source.add(1)
 
     return show_function_search(request,function_search_pk=fs.pk)
@@ -81,7 +84,8 @@ def make_basic_function_search(request, function_pk):
 
 def gene_search(request):
     if request.method == 'POST':
-        form = GeneSearchForm(request.POST)
+        s = Session.objects.get_or_create(session_id=request.session._get_or_create_session_key(), ip_address=request.META.get('REMOTE_ADDR'))
+        form = GeneSearchForm(request.POST, initial={"session": s})
         if form.is_valid():
             gene_search=form.save()
             return redirect("show_gene_search", gene_search_pk=gene_search.pk)
@@ -91,7 +95,8 @@ def gene_search(request):
 
 def function_search(request):
     if request.method == 'POST':
-        form = FunctionSearchForm(request.POST)
+        s = Session.objects.get_or_create(session_id=request.session._get_or_create_session_key(), ip_address=request.META.get('REMOTE_ADDR'))
+        form = FunctionSearchForm(request.POST, initial={"session": s})
         if form.is_valid():
             function_search=form.save()
             return redirect("show_function_search", function_search_pk=function_search.pk)

@@ -66,6 +66,8 @@ class GeneFunction(models.Model):
         return "%s\t%s\t%g\t%s" % (self.gene,self.function,self.fdr,self.expression_source)
 
 class Session(models.Model):
+    datetime =  models.DateTimeField(auto_now=True)
+    session_id = models.CharField(max_length=256)
     ip_address = models.GenericIPAddressField(blank=True, null=True, default=None)
     
 class Search(models.Model):
@@ -78,7 +80,7 @@ class GeneSearch(Search):
     ontology = models.ManyToManyField(Ontology)
     expression_source = models.ManyToManyField(ExpressionSource)
 
-class FunctionSearch(models.Model):
+class FunctionSearch(Search):
     ontology = models.ForeignKey(Ontology, blank=True, null=True)
     function = models.ForeignKey(Function)
     biotype = models.CharField(max_length=14, choices=BIOTYPE_CHOICES, blank=True, null=True)
