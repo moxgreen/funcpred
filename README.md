@@ -9,15 +9,21 @@ This application supports the [Getting Started with Python on Heroku](https://de
 Make sure you have Python [installed properly](http://install.python-guide.org).  Also, install the [Heroku Toolbelt](https://toolbelt.heroku.com/) and [Postgres](https://devcenter.heroku.com/articles/heroku-postgresql#local-setup).
 
 ```sh
+$ apt-get install git apache2 libapache2-mod-wsgi python-virtualenv python-dev libmysqlclient-dev mysql-server
 $ git clone git@github.com:moxgreen/funcpred.git
-$ sudo apt-get install libmysqlclient-dev
-$ sudo apt-get install python-dev
-$ cd python-getting-started
-
+$ sudo mv funcpred /var/www
+$ sudo chgrp www-data -R /var/www/funcpred
+$ cd /var/www/funcpred
+$ virtualenv env
+$ source env/bin/activate
 $ pip install -r requirements.txt
+$ mysql -u root -p -h localhost
+mysql> create database funcpred2
+mysql> GRANT ALL PRIVILEGES ON funcopred2.* To 'funcpred2'@'localhost' IDENTIFIED BY 'funcpred';
+mysql> flush privileges;
 
-$ #createdb python_getting_started
-$ configure the database and set DATABASE_URL in .env
+$ ssh funcored.com 'mysqldump -u funcpred2 -p funcpred2 | gzip ' | zcat | mysql -u funcpred2 -p funcpred2
+$ # configure the database and set DATABASE_URL in .env or settings.py
 
 $ heroku local:run ./manage.py migrate
 $ python manage.py collectstatic
