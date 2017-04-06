@@ -38,6 +38,7 @@ class Function(models.Model):
     keyword = models.CharField(max_length=160, unique=True)
     description = models.TextField(blank=True, null=True)
     ontology = models.ForeignKey(Ontology)
+    #alternative_ancestor = models.ForeignKey(Ontology,blank=True, null=True)
 
     def __unicode__(self):
         return u"%s - %s" % (self.keyword, self.description)
