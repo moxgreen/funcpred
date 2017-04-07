@@ -177,8 +177,10 @@ def show_gene_search(request, gene_search_pk):
 class GeneAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
         qs = Gene.objects.all()
-        if self.q:
-            qs = qs.filter(name__icontains=self.q)
+        q=self.q
+        q=q.strip()
+        if q:
+            qs = qs.filter(Q(name__icontains=q) | Q(ensg__icontains=q))
         return qs
 
 class FunctionAutocomplete(autocomplete.Select2QuerySetView):
