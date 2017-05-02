@@ -1,6 +1,6 @@
 DATA_PRJ_ROOT=$(BIOINFO_ROOT)/prj/lncrna2function_clone/dataset/
-DATA_VERSION=gtex_single_tissue_log.GO.noIEA.BP
-MYSQL=mysql --local-infile -BCAN -u funcpred --password=funcpred -h 130.192.147.6 funcpred
+DATA_VERSION?=gtex_single_tissue_log.GO.noIEA.BP
+MYSQL=mysql --local-infile -BCAN -u funcpred2 --password=rgher5y!243@5d -h vps258910.ovh.net funcpred2
 H_CUTOFF?=0.05
 
 db_GENES: /raid/molineri/bioinfotree/task/annotations/dataset/ensembl/hsapiens/73/gene-readable.map.gz
@@ -9,10 +9,22 @@ db_GENES: /raid/molineri/bioinfotree/task/annotations/dataset/ensembl/hsapiens/7
 	| uniq \
 	| enumerate_rows > $@
 
-db_function.gtex_single_tissue_log.GO.noIEA.BP: $(DATA_PRJ_ROOT)/gtex_single_tissue_log.GO.noIEA.BP/all_tissues/GO.gz $(BIOINFO_ROOT)/task/annotations/dataset/GO/ebi/140311/go_term.gz
+db_function.gtex_single_tissue_log.GO.noIEA.%: $(DATA_PRJ_ROOT)/gtex_single_tissue_log.GO.noIEA.%/all_tissues/GO.gz $(BIOINFO_ROOT)/task/annotations/dataset/GO/ebi/140311/go_term.gz db_ontology
 	zcat $< | cut -f 2 | uniq | sort | uniq | translate -a <(zcat $^2 | cut -f 1,2) 1 \
-	| append_each_row 1 \
-	| enumerate_rows -s `cut -f 1 db_function* | stat_base -b | sed 's/.0$$//'` > $@
+	| append_each_row `bawk '$$2=="GO_$*" {print $$1}' $^3` \
+	| append_each_row -B "\N" > $@
+
+db_function.GSEA_single_tissue_log.h: $(DATA_PRJ_ROOT)/GSEA_single_tissue_log.h/all_tissues/GO.gz 
+	zcat $< | cut -f 2 | uniq | sort | uniq | bawk '{print $$1,$$1}' | append_each_row 4 | append_each_row -B "\N" > $@
+
+db_function.GSEA_single_tissue_log.c2: $(DATA_PRJ_ROOT)/GSEA_single_tissue_log.c2/all_tissues/GO.gz 
+	zcat $< | cut -f 2 | uniq | sort | uniq | bawk '{print $$1,$$1}' | append_each_row 6 | append_each_row -B "\N" > $@
+
+db_function.GSEA_single_tissue_log.c4: $(DATA_PRJ_ROOT)/GSEA_single_tissue_log.c4/all_tissues/GO.gz 
+	zcat $< | cut -f 2 | uniq | sort | uniq | bawk '{print $$1,$$1}' | append_each_row 7 | append_each_row -B "\N" > $@
+
+db_function.GSEA_single_tissue_log.c6: $(DATA_PRJ_ROOT)/GSEA_single_tissue_log.c6/all_tissues/GO.gz 
+	zcat $< | cut -f 2 | uniq | sort | uniq | bawk '{print $$1,$$1}' | append_each_row 8 | append_each_row -B "\N" > $@
 
 db_function.LOADED.%: db_function.%
 	$(MYSQL)<<<"LOAD DATA LOCAL INFILE '$<' INTO TABLE funcpred_function";
@@ -20,11 +32,12 @@ db_function.LOADED.%: db_function.%
 
 db_GeneFunction.$(DATA_VERSION).%: $(DATA_PRJ_ROOT)/$(DATA_VERSION)/%/all/predictions.fdr.gz db_ExpressionSource db_function db_GENES
 	bawk '$$H<$(H_CUTOFF) {print $$H,$$GO,$$gene,$$leave_one_out}' $< \
+	| find_best_multi -n 50 3 1 \
 	| translate <(bawk '{print $$GO,$$pk}' $^3) 2 \
 	| translate <(bawk '{print $$gene_id,$$pk}' $^4) 3 \
 	| append_each_row `bawk '$$4=="$*" {print $$1}' $^2` \
-	| bawk '{tmp=$$4; $$4=$$5; $$5=tmp; print}'\      *scambio due colonne per ordine in db 
-	| enumerate_rows -s $(shell tail -n 1 `ls -tr db_GeneFunction.* | grep -v LOADED | tail -n 1` | cut -f 1) > $@
+	| bawk '{tmp=$$4; $$4=$$5; $$5=tmp; print "\\N",$$0}' > $@      *scambio due colonne per ordine in db e aggiungo NULL in prima colonna per autoincrement
+
 #echo "LOAD DATA LOCAL INFILE 'db_GENES' INTO TABLE funcpred_gene" | mysql --local-infile -u funcpred -p -h 130.192.147.6 funcpred
 
 db_GeneFunction.LOADED.%: db_GeneFunction.%
@@ -41,6 +54,9 @@ db_GeneFunction.LOADED.%: db_GeneFunction.%
 
 db_function:
 	echo "SELECT * FROM funcpred_function;" | $(MYSQL) > $@
+
+db_ontology:
+	echo "SELECT * FROM funcpred_ontology;" | $(MYSQL) > $@
 
 .META: db_function
 	1	pk
