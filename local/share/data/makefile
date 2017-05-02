@@ -6,3 +6,6 @@ gene.txt:
 
 phenotype.txt:
 	https://ctgb-hsr.slack.com/messages/C3ZQLA9GT/files/F4XFYM56J/$@
+
+HPO_descr.txt:
+	wget https://ctgb-hsr.slack.com/files/cittaro.davide/F56KDKGJU/hpo_descr.txt

@@ -26,6 +26,9 @@ db_function.GSEA_single_tissue_log.c4: $(DATA_PRJ_ROOT)/GSEA_single_tissue_log.c
 db_function.GSEA_single_tissue_log.c6: $(DATA_PRJ_ROOT)/GSEA_single_tissue_log.c6/all_tissues/GO.gz 
 	zcat $< | cut -f 2 | uniq | sort | uniq | bawk '{print $$1,$$1}' | append_each_row 8 | append_each_row -B "\N" > $@
 
+db_function.HP: ../local/share/data/phenotype.txt
+	bawk '{print "\\N",$$1,$$1,9}' $< > $@
+
 db_function.LOADED.%: db_function.%
 	$(MYSQL)<<<"LOAD DATA LOCAL INFILE '$<' INTO TABLE funcpred_function";
 	touch $@
@@ -72,3 +75,16 @@ UPDATE_DO_descriptions:
 	| bawk '$$2!~"^ENSP"' | bawk '{print "UPDATE funcpred_function SET description=\"" $$2 "\" WHERE keyword=\"" $$1 "\";"}' \
 	| $(MYSQL)
 
+UPDATE_HP_descriptions: ../local/share/data/HPO_descr.txt
+	bawk '{gsub(/"/,"\\\"",$$2); print "UPDATE funcpred_function SET description=\"" $$2 "\" WHERE keyword=\"" $$1 "\";"}' $< \
+	| $(MYSQL)
+
+db_disease.to_load: ../local/share/data/Disease_list_noIEA.txt
+	bawk '{print "\\N",$$1,$$1}' $< > $@
+
+db_disease.LOADED: db_disease.to_load
+	$(MYSQL)<<<"LOAD DATA LOCAL INFILE '$<' INTO TABLE funcpred_disease";
+	touch $@
+
+db_disease.dump: db_disease.LOADED
+	echo "SELECT * FROM funcpred_disease;" | $(MYSQL) > $@
