@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block main %}
+
+
+<table id="data_table" class="display" width="100%" cellspacing="0" data-order_col="2">
+	<thead>
+		<tr>
+			<th>name</th>
+			<th>description</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for o in ontologies%}
+		<tr>
+			<td><a href="/funcpred/browse_functions/{{o.pk}}/">{{o.name}}</a></td>
+			<td>{{o.description}}</td>
+		</tr>
+		{%endfor%}
+	</tbody>
+</table>
+
+{% endblock%}

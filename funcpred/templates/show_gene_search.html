@@ -1,37 +1,59 @@
 {% extends "base.html" %}
-{% load static from staticfiles %}
-{% load render_table from django_tables2 %}
-
+{% load mox_filters %}
 {% block main %}
 
-<link rel="stylesheet" href="{% static "django_tables2/themes/paleblue/css/screen.css"%}" />
+
+<style>
+.known{
+	color: red;
+}
+</style>
 
 <div>
 	<h1>Gene search</h1>
 	<ul>
-		<li>gene: {{gene_search.gene}}</li>
+		<li>gene: <strong>{{gene_search.gene}}</strong></li>
 		<li>expression sources:
-			{{gene_search.expression_source.all.0}}
+			{%for e in exp_sources_top%}
+			<strong>{{e}}</strong>,
+			{%endfor%}
 		</li>
-		<li>ontologies:
-			{{gene_search.ontology.all.0}}
+		<li>function categories:
+			{%for o in gene_search.ontology.all%}
+				<strong>{{o}},</strong>
+			{% empty %}
+				<strong>All</strong>
+			{%endfor%}
 		</li>
+		<li> keywords in red represent functions know to be associated to the gene</li>
 	</ul>
 </div>
 
-<form action="http://revigo.irb.hr/" method="post" target="_blank">
-      <input type="hidden" name="inputGoList" value="
-{% for row in data %}
-{{row.function.keyword}} {{row.best_fdr}}
-{% endfor %}
-">
-      <input type="hidden" name="isPValue" value="yes"/>
-      <input type="hidden" name="whatIsBetter" value="lower">
-      <input type="submit" name="startRevigo" value="Visualize a summary on Revigo" />
-</form>
-
-
-{% render_table table %}
-
+<table id="data_table" class="display" width="100%" cellspacing="0" data-order_col="4">
+	<thead>
+		<tr>
+			<th>keyword</th>
+			<th>category</th>
+			<th>description</th>
+			<th>fdr</th>
+			{%for v in exp_sources %}
+			<th>{{v}}</th>
+			{%endfor%}
+		</tr>
+	</thead>
+	<tbody>
+{% for row in data%}
+	<tr>
+		<td {%if row.known%}class="known"{%endif%}>{{row.function.keyword|keyfy}}</td>
+		<td>{{row.function.ontology}}</td>
+		<td>{{row.function.description|replace:"/_/ "}}</td>
+		<td>{{row.best_fdr}}</td>
+		{%for v in row.exp_sources %}
+			<td>{% if v %} &#11035; {%endif%}</td>
+		{%endfor%}
+	</tr>
+	{%endfor%}
+	</tbody>
+</table>
 
 {% endblock%}

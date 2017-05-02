@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block main %}
+
+
+
+<table id="data_table" class="display" width="100%" cellspacing="0" data-order_col="2">
+	<thead>
+		<tr>
+			<th>keyword</th>
+			<th>description</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for f in functions%}
+		<tr>
+			<td><a href="{{f.pk}}">{{f.keyword}}</a></td>
+			<td>{{f.description}}</td>
+		</tr>
+		{%endfor%}
+	</tbody>
+</table>
+
+{% endblock%}

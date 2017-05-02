@@ -7,11 +7,10 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django import forms
 #from django.core.urlresolvers import reverse
 from dal import autocomplete
-import django_tables2 as tables
 from django.db.models import Q
 import operator
 
-from .models import GeneSearch, FunctionSearch, Gene, GeneFunction, Function
+from .models import GeneSearch, FunctionSearch, Gene, GeneFunction, Function, Ontology, Session
 
 class GeneSearchForm(forms.ModelForm):
     #gene = forms.ModelChoiceField(
@@ -27,6 +26,21 @@ class GeneSearchForm(forms.ModelForm):
                 'ontology': forms.CheckboxSelectMultiple()
         }
 
+class QuickGeneSearchForm(forms.ModelForm):
+    #gene = forms.ModelChoiceField(
+    #    queryset=Gene.objects.all(),
+    #    widget = autocomplete.ModelSelect2(url='dal-gene')
+    #)
+    class Meta:
+        model = GeneSearch
+        fields = ['gene']
+        labels = {
+            'gene': "",
+        }
+        widgets = {
+                'gene': autocomplete.ModelSelect2(url='dal-gene'),
+        }
+
 class FunctionSearchForm(forms.ModelForm):
     #gene = forms.ModelChoiceField(
     #    queryset=Gene.objects.all(),
@@ -37,38 +51,67 @@ class FunctionSearchForm(forms.ModelForm):
         fields = ['ontology','function','expression_source','biotype']
         widgets = {
                 'function': autocomplete.ModelSelect2(url='dal-function',forward=['ontology',]),
-                'expression_source': forms.CheckboxSelectMultiple(),
         }
 
 def home(request):
-    return render(request, 'home.html')
+    form = QuickGeneSearchForm(request.POST)
+    if request.method == 'POST':
+        s = Session.objects.get_or_create(session_id=request.session._get_or_create_session_key(), ip_address=request.META.get('REMOTE_ADDR'))
+        form = QuickGeneSearchForm(request.POST, initial={"session": s})
+        if form.is_valid():
+            gene_search=form.save()
+            gene_search.expression_source.add(1)
+
+            return redirect("show_gene_search", gene_search_pk=gene_search.pk)
+    return render(request, 'home.html',{'form': form})
+
+def browse_ontologies(request):
+    ontologies=Ontology.objects.all()
+    return render(request, 'browse_ontologies.html',{'ontologies': ontologies})
+
+def browse_functions(request, ontology_pk):
+    functions=Function.objects.filter(ontology=int(ontology_pk))
+    return render(request, 'browse_functions.html',{'functions': functions})
+
+def make_basic_function_search(request, function_pk):
+    s = Session.objects.get_or_create(session_id=request.session._get_or_create_session_key(), ip_address=request.META.get('REMOTE_ADDR'))
+    fs=FunctionSearch.objects.create(function=Function.objects.get(pk=int(function_pk)), session=s[0])
+    fs.expression_source.add(1)
+
+    return show_function_search(request,function_search_pk=fs.pk)
+    
+
 
 def gene_search(request):
     if request.method == 'POST':
-        form = GeneSearchForm(request.POST)
+        s = Session.objects.get_or_create(session_id=request.session._get_or_create_session_key(), ip_address=request.META.get('REMOTE_ADDR'))
+        form = GeneSearchForm(request.POST, initial={"session": s})
         if form.is_valid():
             gene_search=form.save()
             return redirect("show_gene_search", gene_search_pk=gene_search.pk)
     else:
         form = GeneSearchForm()
-    return render(request, 'search.html',{'form': form})
+    return render(request, 'search_gene.html',{'form': form})
 
 def function_search(request):
     if request.method == 'POST':
-        form = FunctionSearchForm(request.POST)
+        s = Session.objects.get_or_create(session_id=request.session._get_or_create_session_key(), ip_address=request.META.get('REMOTE_ADDR'))
+        form = FunctionSearchForm(request.POST, initial={"session": s})
         if form.is_valid():
             function_search=form.save()
             return redirect("show_function_search", function_search_pk=function_search.pk)
     else:
         form = FunctionSearchForm()
-    return render(request, 'search.html',{'form': form})
+    return render(request, 'search_function.html',{'form': form})
 
 def show_function_search(request, function_search_pk):
     function_search = FunctionSearch.objects.get(pk=function_search_pk)
-    columns = [e.name for e in function_search.expression_source.all()]
-
+    exp_sources = [e.name for e in function_search.expression_source.all()]
     gene_functions = GeneFunction.objects.filter(function=function_search.function, expression_source__in=function_search.expression_source.all())
-
+    if function_search.biotype:
+        gene_functions = gene_functions.filter(biotype=function_search.biotype)
+    #return render(request, 'show_gene_search.html',{'gene_search': gene_search,'gene_functions':gene_functions})
+    
     # aggregate ####
     min_fdr=defaultdict(set)
     has_expression_source=defaultdict(set)
@@ -81,29 +124,27 @@ def show_function_search(request, function_search_pk):
     for gf in gene_functions:
         data.append({
             'gene': gf.gene,
-            'biotype': gf.gene.biotype,
-            'description':gf.gene.description,
-            'best_fdr': min_fdr[gf.gene.pk],
+            'known': gf.known,
+            'best_fdr': "%.2g" % min_fdr[gf.gene.pk],
         })
-        for c in columns:
-            v=False
-            if c in has_expression_source[gf.function.pk]:
-                v=True
-            data[-1][c]=v
+        if len(exp_sources)>1:
+           data[-1]['exp_sources'] = [ e in has_expression_source[gf.gene.pk] for e in exp_sources]
     ################
 
-    data.sort(key=itemgetter('best_fdr'))
-    table = FunctionTable(data,dinamically_added_columns=columns)
-    tables.RequestConfig(request,paginate={"per_page": 250}).configure(table)
+    exp_sources_top=exp_sources
+    if len(exp_sources)==1:
+        exp_sources=[]
 
-    return render(request, 'show_function_search.html',{'function_search': function_search,'gene_functions':gene_functions, 'table': table})
+    return render(request, 'show_function_search.html',{'function_search': function_search,'gene_functions':gene_functions, 'data': data , 'exp_sources_top': exp_sources_top, 'exp_sources': exp_sources})
 
 def show_gene_search(request, gene_search_pk):
     gene_search = GeneSearch.objects.get(pk=gene_search_pk)
-    columns = [e.name for e in gene_search.expression_source.all()]
+    exp_sources = [e.name for e in gene_search.expression_source.all()]
 
 
-    gene_functions = GeneFunction.objects.filter(gene=gene_search.gene, function__ontology__in=gene_search.ontology.all(), expression_source__in=gene_search.expression_source.all())
+    gene_functions = GeneFunction.objects.filter(gene=gene_search.gene, expression_source__in=gene_search.expression_source.all())
+    if gene_search.ontology.count():
+        gene_functions = gene_functions.filter(function__ontology__in=gene_search.ontology.all())
     #return render(request, 'show_gene_search.html',{'gene_search': gene_search,'gene_functions':gene_functions})
     
     # aggregate ####
@@ -118,21 +159,20 @@ def show_gene_search(request, gene_search_pk):
     for gf in gene_functions:
         data.append({
             'function': gf.function,
-            'description':gf.function.description,
-            'best_fdr': min_fdr[gf.function.pk],
+            'known': gf.known,
+            'best_fdr': "%.2g" % min_fdr[gf.function.pk],
         })
-        for c in columns:
-            v=False
-            if c in has_expression_source[gf.function.pk]:
-                v=True
-            data[-1][c]=v
+        if len(exp_sources)>1:
+            data[-1]['exp_sources'] = [ e in has_expression_source[gf.function.pk] for e in exp_sources]
     ################
 
-    data.sort(key=itemgetter('best_fdr'))
-    table = GeneTable(data,dinamically_added_columns=columns)
-    tables.RequestConfig(request,paginate={"per_page": 250}).configure(table)
+    exp_sources_top=exp_sources
+    if len(exp_sources)==1:
+        exp_sources=[]
 
-    return render(request, 'show_gene_search.html',{'gene_search': gene_search,'gene_functions':gene_functions, 'table': table, 'data': data })
+    #data.sort(key=itemgetter('best_fdr'))#sorting made by js in data_table
+
+    return render(request, 'show_gene_search.html',{'gene_search': gene_search,'gene_functions':gene_functions, 'data': data , 'exp_sources': exp_sources,'exp_sources_top':exp_sources_top})
 
 class GeneAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
@@ -152,41 +192,6 @@ class FunctionAutocomplete(autocomplete.Select2QuerySetView):
             query2 = reduce(operator.and_, (Q(keyword__icontains=x) for x in self.q.split()))
             qs = qs.filter(query1 | query2)
         return qs
-
-class GeneTable(tables.Table):
-    function  = tables.Column()
-    best_fdr = tables.Column()
-
-    def __init__(self,*args, **kwargs):#https://github.com/bradleyayers/django-tables2/issues/70
-        # Create a copy of base_columns to restore at the end.
-        #self._bc = copy.deepcopy(self.base_columns)
-        for c in kwargs['dinamically_added_columns']:
-            self.base_columns[c] = tables.BooleanColumn()
-        del kwargs['dinamically_added_columns']
-        return super(GeneTable, self).__init__(*args, **kwargs)
-        # restore original base_column to avoid permanent columns. Avoid return in the previous row in case
-        #type(self).base_columns = self._bc
-    
-    def render_best_fdr(self,value):
-        return "%.2g" % value
-
-class FunctionTable(tables.Table):
-    gene  = tables.Column()
-    biotype = tables.Column()
-    best_fdr = tables.Column()
-
-    def __init__(self,*args, **kwargs):#https://github.com/bradleyayers/django-tables2/issues/70
-        # Create a copy of base_columns to restore at the end.
-        #self._bc = copy.deepcopy(self.base_columns)
-        for c in kwargs['dinamically_added_columns']:
-            self.base_columns[c] = tables.BooleanColumn()
-        del kwargs['dinamically_added_columns']
-        return super(FunctionTable, self).__init__(*args, **kwargs)
-        # restore original base_column to avoid permanent columns. Avoid return in the previous row in case
-        #type(self).base_columns = self._bc
-    
-    def render_best_fdr(self,value):
-        return "%.2g" % value
 
 #from django.views.generic.list import ListView
 #class RealtaListView(ListView):
