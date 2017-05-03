@@ -71,7 +71,7 @@ class GeneFunction(models.Model):
         unique_together = (("gene", "function", "expression_source"),)
     
     def __unicode__(self):
-        return "%s\t%s\t%g\t%s" % (self.gene,self.function,self.fdr,self.expression_source)
+        return "%s\t%s\t%g\t%s" % (self.gene.pk,self.function.pk,fdr,self.expression_source)
 
 class Session(models.Model):
     datetime =  models.DateTimeField(auto_now=True)

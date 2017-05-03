@@ -1,8 +1,8 @@
 #-*- coding: utf-8 -*-
 from django import forms
 from django.contrib import admin
+from django.db.models.query import QuerySet
 from .models import *
-
 
 class FunctionAdmin(admin.ModelAdmin):
     search_fields=("keyword","description")
@@ -36,7 +36,9 @@ class FunctionSearchAdmin(admin.ModelAdmin):
 
 class GeneFunctionAdmin(admin.ModelAdmin):
     raw_id_fields=('gene','function')
-    list_display=("pk","gene","function","expression_source","fdr")
+    #list_display=("pk","gene__ensg","function__name","expression_source","fdr")
+    list_filter = ('function__ontology',)
+    show_full_result_count = False
 
 # Register your models here.
 admin.site.register(Disease, DiseaseAdmin)
