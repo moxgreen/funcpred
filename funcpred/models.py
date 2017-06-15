@@ -93,3 +93,9 @@ class FunctionSearch(Search):
     function = models.ForeignKey(Function)
     biotype = models.CharField(max_length=14, choices=BIOTYPE_CHOICES, blank=True, null=True)
     expression_source = models.ManyToManyField(ExpressionSource)
+
+class DiscanRank(models.Model):
+    gene = models.ForeignKey(Gene)
+    function = models.ForeignKey(Function)
+    rank = models.FloatField()
+
