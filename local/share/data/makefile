@@ -9,3 +9,6 @@ phenotype.txt:
 
 HPO_descr.txt:
 	wget https://ctgb-hsr.slack.com/files/cittaro.davide/F56KDKGJU/hpo_descr.txt
+
+site:
+	from Provero
