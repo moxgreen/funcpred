@@ -1,13 +1,3 @@
-# python-getting-started
-
-A barebones Python app, which can easily be deployed to Heroku.
-
-This application supports the [Getting Started with Python on Heroku](https://devcenter.heroku.com/articles/getting-started-with-python) article - check it out.
-
-## Running Locally
-
-Make sure you have Python [installed properly](http://install.python-guide.org).  Also, install the [Heroku Toolbelt](https://toolbelt.heroku.com/) and [Postgres](https://devcenter.heroku.com/articles/heroku-postgresql#local-setup).
-
 ```sh
 $ apt-get install git apache2 libapache2-mod-wsgi python-virtualenv python-dev libmysqlclient-dev mysql-server
 $ git clone git@github.com:moxgreen/funcpred.git
