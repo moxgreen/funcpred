@@ -1,10 +1,10 @@
 ```sh
-$ apt-get install git apache2 libapache2-mod-wsgi python-virtualenv python-dev libmysqlclient-dev mysql-server
+$ apt-get install gcc git apache2 libapache2-mod-wsgi virtualenv python-dev libmysqlclient-dev libmariadb-dev mysql-server
 $ git clone git@github.com:moxgreen/funcpred.git
 $ sudo mv funcpred /var/www
 $ sudo chgrp www-data -R /var/www/funcpred
 $ cd /var/www/funcpred
-$ virtualenv env
+$ virtualenv -p /usr/bin/python2.7 env
 $ source env/bin/activate
 $ pip install -r requirements.txt
 $ mysql -u root -p -h localhost
