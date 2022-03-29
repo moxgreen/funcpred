@@ -28,7 +28,7 @@ jsonpointer==1.0
 #mysql-utilities==1.3.5
 mysqlclient
 oauth==1.0.1
-paramiko==1.15.1
+paramiko==2.10.1
 pexpect==3.2
 prettytable==0.7.2
 pycrypto==2.6.1
